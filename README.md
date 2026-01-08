@@ -1,0 +1,3 @@
+
+REACT_APP_SUPABASE_URL=https://iazaahamcvdrpcmjdsoq.supabase.co
+REACT_APP_SUPABASE_PUBLISHABLE_DEFAULT_KEY=sb_publishable_FEczU0s-jwb_bDTdO2qr5g_gXWS-jtz
