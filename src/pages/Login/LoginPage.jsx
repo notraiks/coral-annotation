@@ -1,28 +1,35 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { authService } from '../../api/services/authService';
+import Button from '../../components/common/Button';
 
 function LoginPage() {
-  const [identifier, setIdentifier] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState(null);
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setError(null);
+    setError('');
 
-    if (!identifier || !password) {
-      setError('Please enter both identifier and password.');
+    if (!username || !password) {
+      setError('Please enter both username and password.');
       return;
     }
 
-    const fakeUser = {
-      id: identifier,
-      name: identifier,
-    };
-    localStorage.setItem('annotatorUser', JSON.stringify(fakeUser));
+    setLoading(true);
 
-    navigate('/annotate');
+    try {
+      await authService.login(username, password);
+      navigate('/annotate');
+    } catch (err) {
+      setError(err.message || 'Login failed. Please try again.');
+      console.error('Login error:', err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -51,33 +58,27 @@ function LoginPage() {
               Expert login
             </h2>
             <p className="text-xs sm:text-sm text-slate-400 mb-6 text-center">
-              Use your assigned identifier to continue annotating your patch set.
+              Use your assigned username to continue annotating your patch set.
             </p>
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-1">
-                <label
-                  className="block text-xs sm:text-sm font-medium text-left"
-                  htmlFor="identifier"
-                >
+                <label className="block text-xs sm:text-sm font-medium text-left" htmlFor="username">
                   Username
                 </label>
                 <input
-                  id="identifier"
+                  id="username"
                   type="text"
-                  value={identifier}
-                  onChange={(e) => setIdentifier(e.target.value)}
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
                   className="w-full rounded-md bg-slate-900 border border-slate-700 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                  placeholder="e.g. valles, diola, expert1"
-                  autoComplete="username"
+                  placeholder="Enter your username"
+                  disabled={loading}
                 />
               </div>
 
               <div className="space-y-1">
-                <label
-                  className="block text-xs sm:text-sm font-medium text-left"
-                  htmlFor="password"
-                >
+                <label className="block text-xs sm:text-sm font-medium text-left" htmlFor="password">
                   Password
                 </label>
                 <input
@@ -87,7 +88,7 @@ function LoginPage() {
                   onChange={(e) => setPassword(e.target.value)}
                   className="w-full rounded-md bg-slate-900 border border-slate-700 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
                   placeholder="Enter your password"
-                  autoComplete="current-password"
+                  disabled={loading}
                 />
               </div>
 
@@ -97,12 +98,14 @@ function LoginPage() {
                 </p>
               )}
 
-              <button
+              <Button
                 type="submit"
-                className="w-full inline-flex justify-center items-center px-4 py-2.5 rounded-md bg-emerald-500 hover:bg-emerald-600 text-sm font-medium text-white transition-colors"
+                variant="primary"
+                className="w-full"
+                disabled={loading}
               >
-                Log in
-              </button>
+                {loading ? 'Signing in...' : 'Sign In'}
+              </Button>
             </form>
           </div>
         </div>
