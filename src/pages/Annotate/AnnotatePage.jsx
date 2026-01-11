@@ -4,13 +4,17 @@ import { TransformWrapper, TransformComponent } from 'react-zoom-pan-pinch';
 import Button from '../../components/common/Button.jsx';
 import Spinner from '../../components/common/Spinner.jsx';
 import coralImage from '../../assets/coral2.jpg';
+import { authService } from '../../api/services/authService.js';
+
 function AnnotatePage() {
   const navigate = useNavigate();
+  const user = authService.getCurrentUser();
   const [currentPatch, setCurrentPatch] = useState(null);
   const [patchHistory, setPatchHistory] = useState([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
 
   // Track current scale so we can clamp zoom-out at default
   const [scale, setScale] = useState(1);
@@ -50,6 +54,17 @@ function AnnotatePage() {
   };
 
   useEffect(() => {
+    if (!user) {
+      navigate('/');
+    }
+  }, [user, navigate]);
+
+  const handleLogout = () => {
+    authService.logout();
+    navigate('/');
+  };
+  
+  useEffect(() => {
     fetchNextPatch();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -85,11 +100,6 @@ function AnnotatePage() {
     } else {
       fetchNextPatch();
     }
-  };
-
-  const handleLogout = () => {
-    localStorage.removeItem('annotatorUser');
-    navigate('/');
   };
 
   if (loading && !currentPatch) {
