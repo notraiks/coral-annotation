@@ -22,6 +22,26 @@ function AnnotatePage() {
   const MIN_SCALE = 1; // do not allow zoom out below default
   const MAX_SCALE = 5;
 
+    // Modal visibility state
+  const [isOptionsOpen, setIsOptionsOpen] = useState(false);
+  const [isImageInfoOpen, setIsImageInfoOpen] = useState(false);
+
+  // TODO later: replace with real per-patch metadata from backend
+  const mockImageMetadata = {
+    name: '2024_AUG_CG_D_T1/GOPR4527.JPG',
+    date: '2024-08-03',
+    monitoringStation: 'Coral Garden D',
+    transectNumber: 'T1',
+    quadratNumber: '1',
+    temperature: '30',
+    latitude: '13.51937',
+    longitude: '120.95555',
+    depth: '8',
+    camera: 'GoPro 9',
+    fullResolution: '5184 x 3888',
+    patchResolution: '224 x 224', // placeholder; later tie to actual patch size
+  };
+
   const labels = [
     { key: 'LC', text: 'Living Coral (LC)', color: 'bg-emerald-500 hover:bg-emerald-600' },
     { key: 'PB', text: 'Partially Bleached (PB)', color: 'bg-amber-400 hover:bg-amber-500 text-slate-900' },
@@ -209,14 +229,26 @@ function AnnotatePage() {
                 </button>
               </div>
 
-              {/* LOGOUT - TOP RIGHT, TRANSPARENT */}
-              <button
-                onClick={handleLogout}
-                className="absolute top-4 right-4 z-50 px-3 py-2 rounded-md text-xs sm:text-sm font-medium text-red-200 bg-red-900/30 hover:bg-red-900/50 border border-red-700/70"
-                title="Logout"
-              >
-                Logout
-              </button>
+              {/* TOP-RIGHT: OPTIONS + IMAGE INFO */}
+              <div className="absolute top-4 right-4 z-50 flex items-center gap-2 bg-transparent">
+                {/* Image Info Button */}
+                <button
+                  onClick={() => setIsImageInfoOpen(true)}
+                  className="px-3 py-2 rounded-md text-xs sm:text-sm font-medium text-emerald-200 bg-slate-900/40 hover:bg-slate-900/60 border border-emerald-500/60"
+                  title="View image metadata"
+                >
+                  Image Info
+                </button>
+
+                {/* Options Button (opens modal) */}
+                <button
+                  onClick={() => setIsOptionsOpen(true)}
+                  className="px-3 py-2 rounded-md text-xs sm:text-sm font-medium text-slate-200 bg-slate-900/40 hover:bg-slate-900/60 border border-slate-600/70"
+                  title="Options"
+                >
+                  Options
+                </button>
+              </div>
 
               {/* PROGRESS - TOP CENTER, SEMI-TRANSPARENT */}
               {currentPatch && (
@@ -278,6 +310,139 @@ function AnnotatePage() {
                   <div className="bg-slate-900/70 border border-slate-700 rounded-lg p-6">
                     <Spinner size="lg" className="mx-auto mb-2" />
                     <p className="text-slate-200 text-sm">Processing...</p>
+                  </div>
+                </div>
+              )}
+
+              {/* OPTIONS MODAL */}
+              {isOptionsOpen && (
+                <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50">
+                  <div className="bg-slate-900 border border-slate-700 rounded-xl shadow-2xl max-w-sm w-full mx-4">
+                    <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800">
+                      <h2 className="text-sm sm:text-base font-semibold text-slate-100">
+                        Options
+                      </h2>
+                      <button
+                        onClick={() => setIsOptionsOpen(false)}
+                        className="text-slate-400 hover:text-slate-200 text-lg leading-none"
+                        aria-label="Close options"
+                      >
+                        ×
+                      </button>
+                    </div>
+                    <div className="px-4 py-4 space-y-3">
+                      <p className="text-xs sm:text-sm text-slate-400">
+                        Manage your current annotation session. More options can be
+                        added here later.
+                      </p>
+                      <div className="flex flex-col gap-2">
+                        <button
+                          onClick={() => {
+                            setIsOptionsOpen(false);
+                            handleLogout();
+                          }}
+                          className="w-full inline-flex justify-center items-center px-4 py-2.5 rounded-md bg-red-600 hover:bg-red-700 text-sm font-medium text-white transition-colors"
+                        >
+                          Logout
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* IMAGE INFO MODAL */}
+              {isImageInfoOpen && (
+                <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50">
+                  <div className="bg-slate-900 border border-slate-700 rounded-xl shadow-2xl max-w-lg w-full mx-4">
+                    <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800">
+                      <h2 className="text-sm sm:text-base font-semibold text-slate-100">
+                        Image Information
+                      </h2>
+                      <button
+                        onClick={() => setIsImageInfoOpen(false)}
+                        className="text-slate-400 hover:text-slate-200 text-lg leading-none"
+                        aria-label="Close image info"
+                      >
+                        ×
+                      </button>
+                    </div>
+                    <div className="px-4 py-4 max-h-[70vh] overflow-y-auto text-xs sm:text-sm text-slate-200 space-y-3">
+                      <div>
+                        <h3 className="text-xs font-semibold text-slate-400 mb-1">
+                          Monitoring Metadata
+                        </h3>
+                        <dl className="grid grid-cols-2 gap-x-4 gap-y-1">
+                          <dt className="text-slate-400">Name</dt>
+                          <dd className="text-slate-100">{mockImageMetadata.name}</dd>
+
+                          <dt className="text-slate-400">Date</dt>
+                          <dd className="text-slate-100">{mockImageMetadata.date}</dd>
+
+                          <dt className="text-slate-400">Monitoring Station</dt>
+                          <dd className="text-slate-100">
+                            {mockImageMetadata.monitoringStation}
+                          </dd>
+
+                          <dt className="text-slate-400">Transect</dt>
+                          <dd className="text-slate-100">
+                            {mockImageMetadata.transectNumber}
+                          </dd>
+
+                          <dt className="text-slate-400">Quadrat</dt>
+                          <dd className="text-slate-100">
+                            {mockImageMetadata.quadratNumber}
+                          </dd>
+
+                          <dt className="text-slate-400">Temperature (°C)</dt>
+                          <dd className="text-slate-100">
+                            {mockImageMetadata.temperature}
+                          </dd>
+                        </dl>
+                      </div>
+
+                      <div>
+                        <h3 className="text-xs font-semibold text-slate-400 mb-1">
+                          Location & Depth
+                        </h3>
+                        <dl className="grid grid-cols-2 gap-x-4 gap-y-1">
+                          <dt className="text-slate-400">Latitude</dt>
+                          <dd className="text-slate-100">
+                            {mockImageMetadata.latitude}
+                          </dd>
+
+                          <dt className="text-slate-400">Longitude</dt>
+                          <dd className="text-slate-100">
+                            {mockImageMetadata.longitude}
+                          </dd>
+
+                          <dt className="text-slate-400">Depth (m)</dt>
+                          <dd className="text-slate-100">{mockImageMetadata.depth}</dd>
+                        </dl>
+                      </div>
+
+                      <div>
+                        <h3 className="text-xs font-semibold text-slate-400 mb-1">
+                          Imaging
+                        </h3>
+                        <dl className="grid grid-cols-2 gap-x-4 gap-y-1">
+                          <dt className="text-slate-400">Camera</dt>
+                          <dd className="text-slate-100">
+                            {mockImageMetadata.camera}
+                          </dd>
+
+                          <dt className="text-slate-400">Full resolution</dt>
+                          <dd className="text-slate-100">
+                            {mockImageMetadata.fullResolution}
+                          </dd>
+
+                          <dt className="text-slate-400">Patch resolution</dt>
+                          <dd className="text-slate-100">
+                            {mockImageMetadata.patchResolution}
+                          </dd>
+                        </dl>
+                      </div>
+                    </div>
                   </div>
                 </div>
               )}
